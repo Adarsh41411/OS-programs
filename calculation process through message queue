@@ -1,0 +1,188 @@
+// for getting expression
+
+#include<stdio.h>
+#include<stdlib.h>
+#include<ctype.h>
+#include<string.h>
+#include<unistd.h>
+#include<sys/types.h>
+#include<sys/wait.h>
+#include<sys/ipc.h>
+#include<sys/msg.h>
+
+int main()
+{
+   key_t key;
+   int msgid;
+   char expression[50];
+   long mesg_type = 1;
+   // ftok to generate unique key
+   key = ftok("progfile",65);
+   msgid = msgget(key,0666 | IPC_CREAT);
+   fgets(expression,50,stdin);
+   msgsend(msgid,&expression,sizeof(expression),0);
+
+   return 0;
+}
+
+//  -------------------------------------------------------       getting answer       --------------------------------------------------------------------
+
+#include<stdio.h>
+#include<stdlib.h>
+#include<ctype.h>
+#include<string.h>
+#include<unistd.h>
+#include<sys/types.h>
+#include<sys/wait.h>
+#include<sys/ipc.h>
+#include<sys/msg.h>
+
+
+int values[50],top1 = -1,top2 = -1;
+char ops[50];
+
+void push_values(int n){
+   values[++top1] =  n;
+
+}
+void push_ops(char ch){
+ ops[++top2] = ch;
+}
+
+int pop_values()
+{
+    return values[top1--];
+}
+
+char pop_ops(){
+ return opd[top2--];
+}
+
+int before_eval(int values[50],char ops[50])
+{
+    int x,y;
+    char ope;
+    x = pop_values();
+    //printf("%d",x);
+
+    y = pop_values();
+    //printf("%d",y);
+    ope = pop_ops();
+    //printf("%c",ope);
+
+    switch(ope)
+    {
+    case '+':
+        return x+y;
+    case '-':
+        return y-x;
+    case '*':
+        return x*y;
+    case '/':
+        if(x==0){
+            printf("\ncannot divisible by 0");
+            exit(0);
+        }
+        else
+            return y/x;
+    }
+    return 0;
+}
+
+int operator(char ch){
+   return(ch=='+'||ch=='-'||ch=='*'||ch=='/'||ch=='^');
+}
+
+
+int precedency(char c)
+{
+    switch(c)
+    {
+    case '+':
+        return 1;
+    case '-':
+        return 1;
+    case '*':
+        return 2;
+    case '/':
+        return 2;
+    case '^':
+        return 3;
+
+    }
+    return -1;
+}
+
+
+int evaluation(char expression[50])
+{
+    int i,num,output,r;
+    char c;
+    for(i=0;expression[i]!='\0';i++)
+    {
+        c = expression[i];
+        if(isdigit(c)!=0)
+        {
+            num = 0;
+            while(isdigit(c))
+            {
+                num = num*10 + (c-'0');
+                i++;
+                if(i<strlen(expression))
+                    c = expression[i];
+                else
+                    break;
+            }
+            i--;
+            
+            push_values(num);
+        }
+        else if(c == '(')
+        {
+            
+            push_ops(c);
+        }
+        else if(c == ')')
+        {
+            while(op[top2]!='(')
+            {
+                r = before_eval(values,ops);
+                
+                push_values(r);
+            }
+            pop_ops();
+        }
+        else if(operator(c))
+        {
+            while(top2!=-1 && precedency(c)<=precedency(ops[top2]))
+            {
+                output = before_eval(values,ops);
+               
+                push_values(output);
+            }
+          
+            push_ops(c);
+        }
+    }
+    while(to!=-1)
+    {
+        output = before_eval(values,ops);
+        
+        push_values(output);
+    }
+    return pop_values();
+}
+int main()
+{
+  key_t key;
+  int msgid;
+  char expression[50];
+  key = ftok("progfile",65);
+  msgid = msgget(key,0666 | IPC_CREAT);
+  msgrcv(msgid,&expression,sizeof(expression),1,0);
+  n = evaluation(expression);
+  printf("%d",n);
+  msgctl(msgid,IPC_RMID,NULL);
+  
+  return 0;
+}
