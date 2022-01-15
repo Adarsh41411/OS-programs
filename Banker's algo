@@ -1,0 +1,80 @@
+#include <stdio.h>
+int main()
+{
+    // five processes named P0,P1,P2,P3,P4
+ 
+    int n, m, i, j, k;
+    n = 5; // Number of processes
+    m = 3; // Number of resources
+
+    // Allocation Matrix
+    int alloc[5][3] = { { 1, 1, 3 }, // P0    
+                        { 2, 0, 4 }, // P1
+                        { 3, 5, 2 }, // P2
+                        { 3, 1, 1 }, // P3
+                        { 1, 0, 2 } }; // P4
+    // MAXimum Matrix 
+
+    int max[5][3] = { { 6, 5, 3 }, // P0    
+                      { 3, 6, 2 }, // P1
+                      { 9, 3, 2 }, // P2
+                      { 2, 2, 4 }, // P3
+                      { 4, 9, 3 } }; // P4
+      // Available Resources
+    int avail[3] = { 1, 2, 5 };
+ 
+    int X[n], ans[n], ind = 0;
+    for (k = 0; k < n; k++) {
+        X[k] = 0;
+    }
+    int need[n][m];
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < m; j++)
+            need[i][j] = max[i][j] - alloc[i][j];
+    }
+    int y = 0;
+    for (k = 0; k < 5; k++) {
+        for (i = 0; i < n; i++) {
+            if (X[i] == 0) {
+ 
+                int TEM = 0;
+                for (j = 0; j < m; j++) {
+                    if (need[i][j] > avail[j]){
+                        TEM = 1;
+                         break;
+                    }
+                }
+ 
+                if (TEM == 0) {
+                    ans[ind++] = i;
+                    for (y = 0; y < m; y++)
+                        avail[y] += alloc[i][y];
+                    X[i] = 1;
+                }
+            }
+        }
+    }
+   
+      int TEM = 1;
+       
+      for(int i=0;i<n;i++)
+    {
+      if(X[i]==0)
+      {
+        TEM=0;
+         printf("not safe");
+        break;
+      }
+    }
+     
+      if(TEM==1)
+    {
+      printf("SAFE Sequence\n");
+      for (i = 0; i < n - 1; i++)
+        printf("P%d ->", ans[i]);
+      printf("P%d", ans[n - 1]);
+    }
+     
+ 
+    return (0);
+    }
