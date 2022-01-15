@@ -1,0 +1,26 @@
+#include<stdio.h>
+#include<stdlib.h>
+int main(int argc, char **argv)
+{
+    FILE *meminfo = fopen("/proc/meminfo","rb");
+    FILE *cpuinfo = fopen("/proc/cpuinfo","rb");
+    char *arg = 0;
+    char *arg1 = 0;
+    size_t size = 0;
+    size_t size1 = 0;
+    while(getdelim(&arg,&size,0,cpuinfo) != -1)
+    {
+
+        puts(arg);
+    }
+    free(arg);
+    fclose(cpuinfo);
+     while(getdelim(&arg,&size,0,meminfo) != -1)
+    {
+
+        puts(arg);
+    }
+    free(arg);
+    fclose(meminfo);
+ return 0;
+}
